@@ -1,36 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-
-namespace SPFileZilla2013
+﻿namespace SPFileZilla2013
 {
-    public partial class FormAbout : Form
-    {
+     using System;
+     using System.Windows.Forms;
 
-        public FormAbout()
-        {
-            InitializeComponent();
-            btnOk.Focus();
-            textBox1.Select(0, 0);
-            pbFileZilla.Click += new EventHandler(pbFileZilla_Click);
+     public partial class FormAbout : Form
+     {
+          #region Public Constructors
 
-            lblVersionNumber.Text = BandR.Consts.VERSION;
-        }
+          public FormAbout()
+          {
+               InitializeComponent();
+               btnOk.Focus();
+               textBox1.Select(0, 0);
+               pbFileZilla.Click += new EventHandler(pbFileZilla_Click);
 
-        void pbFileZilla_Click(object sender, EventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://filezilla-project.org/");
-        }
+               lblVersionNumber.Text = BandR.Consts.VERSION;
+          }
 
-        private void btnOk_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
+          #endregion Public Constructors
 
-    }
+          #region Private Methods
+
+          private void btnOk_Click(object sender, EventArgs e)
+          {
+               this.Close();
+          }
+
+          private void pbFileZilla_Click(object sender, EventArgs e)
+          {
+               System.Diagnostics.Process.Start("https://filezilla-project.org/");
+          }
+
+          #endregion Private Methods
+     }
 }

@@ -1,247 +1,259 @@
-﻿using BandR;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-
-namespace SPFileZilla2013
+﻿namespace SPFileZilla2013
 {
-    public partial class FormViewEditFile : Form
-    {
+     using System;
+     using System.Collections.Generic;
+     using System.ComponentModel;
+     using System.Drawing;
+     using System.Windows.Forms;
+     using BandR;
 
-        public string _fileData { get; set; }
-        public string _filePath { get; set; }
+     public partial class FormViewEditFile : Form
+     {
+          #region Private Fields
 
-        private BackgroundWorker bgWorker;
-        private BackgroundWorker bgw2;
+          private BackgroundWorker bgw2;
+          private BackgroundWorker bgWorker;
+          private bool colorIsWhite = false;
 
-        public Form1 form1 { get; set; }
+          #endregion Private Fields
 
-        public string spSiteUrl { get; set; }
-        public string spUsername { get; set; }
-        public string spPassword { get; set; }
-        public string spDomain { get; set; }
-        public bool isSpOnline { get; set; }
+          #region Public Constructors
 
-        /// <summary>
-        /// </summary>
-        public FormViewEditFile()
-        {
-            InitializeComponent();
-        }
+          /// <summary>
+          /// </summary>
+          public FormViewEditFile()
+          {
+               InitializeComponent();
+          }
 
-        /// <summary>
-        /// </summary>
-        void bgWorkerAll_ProgressChanged(object sender, ProgressChangedEventArgs e)
-        {
-            var obj = e.UserState;
-            MessageBox.Show(obj.ToString());
-        }
+          #endregion Public Constructors
 
-        /// <summary>
-        /// </summary>
-        public void InitFormControls()
-        {
-            lbFilePath.Text = _filePath;
-            tbFileData.ResetText();
-            tbFileData.AppendText(_fileData);
+          #region Public Properties
 
-            lbFileUpdatedMsg.Text = "";
-            lbFileUpdatedMsg.Visible = false;
+          public string _fileData { get; set; }
+          public string _filePath { get; set; }
+          public Form1 form1 { get; set; }
 
-            tbFileData.Font = new System.Drawing.Font("Courier New", float.Parse(form1.editorFontSize));
+          public bool isSpOnline { get; set; }
+          public string spDomain { get; set; }
+          public string spPassword { get; set; }
+          public string spSiteUrl { get; set; }
+          public string spUsername { get; set; }
 
-            tbFileData.WordWrap = form1.editorTextIsWrap == "1";
+          #endregion Public Properties
 
-            if (form1.editorColorIsWhite == "1")
-            {
-                tbFileData.BackColor = Color.FromName("ControlLightLight");
-                tbFileData.ForeColor = Color.Black;
-                colorIsWhite = true;
-            }
-            else
-            {
-                tbFileData.BackColor = Color.FromName("ControlDarkDark");
-                tbFileData.ForeColor = Color.White;
-                colorIsWhite = false;
-            }
-        }
+          #region Public Methods
 
-        /// <summary>
-        /// </summary>
-        private void btnClose_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
+          /// <summary>
+          /// </summary>
+          public void InitFormControls()
+          {
+               lbFilePath.Text = _filePath;
+               tbFileData.ResetText();
+               tbFileData.AppendText(_fileData);
 
-        /// <summary>
-        /// </summary>
-        private void btnSave_Click(object sender, EventArgs e)
-        {
-            form1.DisableFormFields();
+               lbFileUpdatedMsg.Text = "";
+               lbFileUpdatedMsg.Visible = false;
 
-            btnClose.Enabled = false;
-            btnSave.Enabled = false;
+               tbFileData.Font = new System.Drawing.Font("Courier New", float.Parse(form1.editorFontSize));
 
-            bgWorker = new BackgroundWorker();
-            bgWorker.DoWork += new DoWorkEventHandler(bgWorker_DoWork);
-            bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
-            bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorkerAll_ProgressChanged);
-            bgWorker.WorkerReportsProgress = true;
-            bgWorker.RunWorkerAsync();
-        }
+               tbFileData.WordWrap = form1.editorTextIsWrap == "1";
 
-        /// <summary>
-        /// </summary>
-        private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            string msg = "";
+               if (form1.editorColorIsWhite == "1")
+               {
+                    tbFileData.BackColor = Color.FromName("ControlLightLight");
+                    tbFileData.ForeColor = Color.Black;
+                    colorIsWhite = true;
+               }
+               else
+               {
+                    tbFileData.BackColor = Color.FromName("ControlDarkDark");
+                    tbFileData.ForeColor = Color.White;
+                    colorIsWhite = false;
+               }
+          }
 
-            byte[] buffer = null;
+          #endregion Public Methods
 
-            var isSP = !spSiteUrl.IsNull();
+          #region Private Methods
 
-            try
-            {
-                if (System.Configuration.ConfigurationManager.AppSettings["editorTextEncodingIsASCII"] == "1")
-                {
-                    buffer = System.Text.Encoding.ASCII.GetBytes(tbFileData.Text.Trim());
-                }
-                else
-                {
-                    buffer = System.Text.Encoding.UTF8.GetBytes(tbFileData.Text.Trim());
-                }
-            }
-            catch (Exception ex)
-            {
-                msg = "ERROR converting to byte array: " + ex.Message;
-            }
+          /// <summary>
+          /// </summary>
+          private void bgw2_DoWork(object sender, DoWorkEventArgs e)
+          {
+               System.Threading.Thread.Sleep(2 * 1000);
+          }
 
-            if (msg.IsNull())
-            {
-                if (isSP)
-                {
-                    if (SpComHelper.UploadFileToSharePoint(spSiteUrl, spUsername, spPassword, spDomain, isSpOnline, _filePath, buffer, out msg))
+          /// <summary>
+          /// </summary>
+          private void bgw2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+          {
+               lbFileUpdatedMsg.Text = "";
+               lbFileUpdatedMsg.Visible = false;
+          }
+
+          /// <summary>
+          /// </summary>
+          private void bgWorker_DoWork(object sender, DoWorkEventArgs e)
+          {
+               string msg = "";
+
+               byte[] buffer = null;
+
+               var isSP = !spSiteUrl.IsNull();
+
+               try
+               {
+                    if (System.Configuration.ConfigurationManager.AppSettings["editorTextEncodingIsASCII"] == "1")
                     {
-                        msg = "File Saved!";
+                         buffer = System.Text.Encoding.ASCII.GetBytes(tbFileData.Text.Trim());
                     }
-                }
-                else
-                {
-                    try
+                    else
                     {
-                        System.IO.File.WriteAllBytes(_filePath, buffer);
-                        msg = "File Saved!";
+                         buffer = System.Text.Encoding.UTF8.GetBytes(tbFileData.Text.Trim());
                     }
-                    catch (Exception ex)
+               }
+               catch (Exception ex)
+               {
+                    msg = "ERROR converting to byte array: " + ex.Message;
+               }
+
+               if (msg.IsNull())
+               {
+                    if (isSP)
                     {
-                        msg = ex.Message;
+                         if (SpComHelper.UploadFileToSharePoint(spSiteUrl, spUsername, spPassword, spDomain, isSpOnline, _filePath, buffer, out msg))
+                         {
+                              msg = "File Saved!";
+                         }
                     }
-                }
-            }
+                    else
+                    {
+                         try
+                         {
+                              System.IO.File.WriteAllBytes(_filePath, buffer);
+                              msg = "File Saved!";
+                         }
+                         catch (Exception ex)
+                         {
+                              msg = ex.Message;
+                         }
+                    }
+               }
 
-            e.Result = new List<object>() { msg };
-        }
+               e.Result = new List<object>() { msg };
+          }
 
-        /// <summary>
-        /// </summary>
-        private void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            form1.EnableFormFields();
+          /// <summary>
+          /// </summary>
+          private void bgWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+          {
+               form1.EnableFormFields();
 
-            btnClose.Enabled = true;
-            btnSave.Enabled = true;
+               btnClose.Enabled = true;
+               btnSave.Enabled = true;
 
-            var lstResults = e.Result as List<object>;
-            var msg = lstResults[0].SafeTrim();
+               var lstResults = e.Result as List<object>;
+               var msg = lstResults[0].SafeTrim();
 
-            if (msg == "File Saved!")
-            {
-                lbFileUpdatedMsg.Text = string.Format("{0}", msg);
-                lbFileUpdatedMsg.Visible = true;
+               if (msg == "File Saved!")
+               {
+                    lbFileUpdatedMsg.Text = string.Format("{0}", msg);
+                    lbFileUpdatedMsg.Visible = true;
 
-                bgw2 = new BackgroundWorker();
-                bgw2 = new BackgroundWorker();
-                bgw2.DoWork += new DoWorkEventHandler(bgw2_DoWork);
-                bgw2.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgw2_RunWorkerCompleted);
-                bgw2.RunWorkerAsync();
-            }
-            else
-            {
-                MessageBox.Show(msg);
-            }
+                    bgw2 = new BackgroundWorker();
+                    bgw2 = new BackgroundWorker();
+                    bgw2.DoWork += new DoWorkEventHandler(bgw2_DoWork);
+                    bgw2.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgw2_RunWorkerCompleted);
+                    bgw2.RunWorkerAsync();
+               }
+               else
+               {
+                    MessageBox.Show(msg);
+               }
+          }
 
-        }
+          /// <summary>
+          /// </summary>
+          private void bgWorkerAll_ProgressChanged(object sender, ProgressChangedEventArgs e)
+          {
+               var obj = e.UserState;
+               MessageBox.Show(obj.ToString());
+          }
 
-        /// <summary>
-        /// </summary>
-        private void bgw2_DoWork(object sender, DoWorkEventArgs e)
-        {
-            System.Threading.Thread.Sleep(2 * 1000);
-        }
+          /// <summary>
+          /// </summary>
+          private void btnClose_Click(object sender, EventArgs e)
+          {
+               this.Close();
+          }
 
-        /// <summary>
-        /// </summary>
-        private void bgw2_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            lbFileUpdatedMsg.Text = "";
-            lbFileUpdatedMsg.Visible = false;
-        }
+          /// <summary>
+          /// </summary>
+          private void btnInvertColors_Click(object sender, EventArgs e)
+          {
+               if (colorIsWhite == false)
+               {
+                    tbFileData.BackColor = Color.FromName("ControlLightLight");
+                    tbFileData.ForeColor = Color.Black;
+                    colorIsWhite = true;
+               }
+               else
+               {
+                    tbFileData.BackColor = Color.FromName("ControlDarkDark");
+                    tbFileData.ForeColor = Color.White;
+                    colorIsWhite = false;
+               }
+          }
 
-        /// <summary>
-        /// </summary>
-        private void btnResizeFont_Click(object sender, EventArgs e)
-        {
-            var size = tbFileData.Font.Size;
+          /// <summary>
+          /// </summary>
+          private void btnResizeFont_Click(object sender, EventArgs e)
+          {
+               var size = tbFileData.Font.Size;
 
-            if (size >= 14)
-            {
-                size = 8f;
-            }
+               if (size >= 14)
+               {
+                    size = 8f;
+               }
 
-            tbFileData.Font = new System.Drawing.Font("Courier New", size + 1f);
-        }
+               tbFileData.Font = new System.Drawing.Font("Courier New", size + 1f);
+          }
 
-        /// <summary>
-        /// </summary>
-        private void btnWrapText_Click(object sender, EventArgs e)
-        {
-            tbFileData.WordWrap = !tbFileData.WordWrap;
-        }
+          /// <summary>
+          /// </summary>
+          private void btnSave_Click(object sender, EventArgs e)
+          {
+               form1.DisableFormFields();
 
-        bool colorIsWhite = false;
+               btnClose.Enabled = false;
+               btnSave.Enabled = false;
 
-        /// <summary>
-        /// </summary>
-        private void btnInvertColors_Click(object sender, EventArgs e)
-        {
-            if (colorIsWhite == false)
-            {
-                tbFileData.BackColor = Color.FromName("ControlLightLight");
-                tbFileData.ForeColor = Color.Black;
-                colorIsWhite = true;
-            }
-            else
-            {
-                tbFileData.BackColor = Color.FromName("ControlDarkDark");
-                tbFileData.ForeColor = Color.White;
-                colorIsWhite = false;
-            }
-        }
+               bgWorker = new BackgroundWorker();
+               bgWorker.DoWork += new DoWorkEventHandler(bgWorker_DoWork);
+               bgWorker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bgWorker_RunWorkerCompleted);
+               bgWorker.ProgressChanged += new ProgressChangedEventHandler(bgWorkerAll_ProgressChanged);
+               bgWorker.WorkerReportsProgress = true;
+               bgWorker.RunWorkerAsync();
+          }
 
-        /// <summary>
-        /// </summary>
-        private void FormViewEditFile_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            // save editor settings back to form1 vars
-            form1.editorFontSize = tbFileData.Font.Size.ToString();
-            form1.editorColorIsWhite = colorIsWhite ? "1" : "0";
-            form1.editorTextIsWrap = tbFileData.WordWrap ? "1" : "0";
-        }
+          /// <summary>
+          /// </summary>
+          private void btnWrapText_Click(object sender, EventArgs e)
+          {
+               tbFileData.WordWrap = !tbFileData.WordWrap;
+          }
 
-    }
+          /// <summary>
+          /// </summary>
+          private void FormViewEditFile_FormClosing(object sender, FormClosingEventArgs e)
+          {
+               // save editor settings back to form1 vars
+               form1.editorFontSize = tbFileData.Font.Size.ToString();
+               form1.editorColorIsWhite = colorIsWhite ? "1" : "0";
+               form1.editorTextIsWrap = tbFileData.WordWrap ? "1" : "0";
+          }
+
+          #endregion Private Methods
+     }
 }

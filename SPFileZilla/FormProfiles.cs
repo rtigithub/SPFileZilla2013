@@ -1,270 +1,276 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using BandR;
-using BandR.CustObjs;
-using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
-
-namespace SPFileZilla2013
+﻿namespace SPFileZilla2013
 {
-    public partial class FormProfiles : Form
-    {
+     using System;
+     using System.Collections.Generic;
+     using System.Data;
+     using System.IO;
+     using System.Linq;
+     using System.Windows.Forms;
+     using BandR;
+     using BandR.CustObjs;
 
-        public Form1 form1;
+     public partial class FormProfiles : Form
+     {
+          #region Public Fields
 
-        internal List<ProfileDetail> lstProfiles;
+          public Form1 form1;
 
-        /// <summary>
-        /// </summary>
-        public FormProfiles()
-        {
-            InitializeComponent();
+          #endregion Public Fields
 
-            this.Closed += new EventHandler(FormProfiles_Closed);
+          #region Internal Fields
 
-            // retrieve saved profiles from file, put in listbox
-            lstProfiles = new List<ProfileDetail>();
-            GetRecentSessionInfo();
-            LoadProfilesIntoListbox();
-        }
+          internal List<ProfileDetail> lstProfiles;
 
-        /// <summary>
-        /// </summary>
-        void FormProfiles_Closed(object sender, EventArgs e)
-        {
-            // save profiles to file
-            SaveCurrentSessionInfo();
-        }
+          #endregion Internal Fields
 
-        /// <summary>
-        /// </summary>
-        private void SaveCurrentSessionInfo()
-        {
-            StreamWriter sw = null;
+          #region Public Constructors
 
-            try
-            {
-                string iniPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[] { '\\' }) + "\\" + "profiles.dat";
-                sw = new StreamWriter(iniPath, false);
-                var xml = XmlSerialization.Serialize(lstProfiles);
+          /// <summary>
+          /// </summary>
+          public FormProfiles()
+          {
+               InitializeComponent();
 
-                xml = GenUtil.Cypher(xml);
+               this.Closed += new EventHandler(FormProfiles_Closed);
 
-                sw.Write(xml);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error");
-            }
-            finally
-            {
-                if (sw != null) sw.Dispose();
-            }
-        }
+               // retrieve saved profiles from file, put in listbox
+               lstProfiles = new List<ProfileDetail>();
+               GetRecentSessionInfo();
+               LoadProfilesIntoListbox();
+          }
 
-        /// <summary>
-        /// </summary>
-        private void GetRecentSessionInfo()
-        {
-            StreamReader sr = null;
+          #endregion Public Constructors
 
-            try
-            {
-                string iniPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[] { '\\' }) + "\\" + "profiles.dat";
-                var fi = new FileInfo(iniPath);
+          #region Private Methods
 
-                if (fi.Exists)
-                {
-                    sr = new StreamReader(iniPath);
-                    var content = sr.ReadToEnd();
-                    content = GenUtil.Cypher(content);
-                    lstProfiles = XmlSerialization.Deserialize<List<ProfileDetail>>(content);
-                }
+          /// <summary>
+          /// </summary>
+          private void btnAddProfile_Click(object sender, EventArgs e)
+          {
+               // create new profile and load its details
+               tbProfileName.Text = "";
+               tbSiteUrl.Text = "";
+               tbUsername.Text = "";
+               tbPassword.Text = "";
+               tbDomain.Text = "";
+               cbIsSharePointOnline.Checked = false;
 
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message, "Error");
-            }
-            finally
-            {
-                if (sr != null) sr.Dispose();
-            }
-        }
+               lbProfiles.SelectedIndex = -1;
+          }
 
-        /// <summary>
-        /// </summary>
-        private void LoadProfilesIntoListbox()
-        {
-            lbProfiles.Items.Clear();
+          /// <summary>
+          /// </summary>
+          private void btnConnectProfile_Click(object sender, EventArgs e)
+          {
+               // save profile first
+               btnSaveProfile_Click(null, null);
 
-            foreach (ProfileDetail profile in lstProfiles.OrderBy(x => x.profileName))
-            {
-                lbProfiles.Items.Add(profile.profileName);
-            }
-        }
+               // get saved profile
+               var prof = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == tbProfileName.Text.Trim().ToLower());
 
-        /// <summary>
-        /// </summary>
-        private void lbProfiles_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            // load selected profile details
-            if (lbProfiles.SelectedIndex < 0)
-            {
-                return;
-            }
+               if (prof == null)
+               {
+                    return;
+               }
 
-            var profName = lbProfiles.SelectedItem.ToString();
+               form1.LoadProfile(prof);
+               this.Hide();
 
-            if (GenUtil.IsNull(profName))
-            {
-                return;
-            }
+               form1.Show();
+               form1.Focus();
 
-            var prof = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == profName.Trim().ToLower());
+               this.Close();
+          }
 
-            if (prof == null)
-            {
-                return;
-            }
+          /// <summary>
+          /// </summary>
+          private void btnDeleteProfile_Click(object sender, EventArgs e)
+          {
+               DialogResult dgResult = MessageBox.Show("Are you sure?",
+                   "Delete Profile",
+                   MessageBoxButtons.YesNo);
 
-            tbProfileName.Text = prof.profileName;
-            tbSiteUrl.Text = prof.siteUrl;
-            tbUsername.Text = prof.username;
-            tbPassword.Text = prof.password;
-            tbDomain.Text = prof.domain;
-            cbIsSharePointOnline.Checked = prof.isSpOnline;
+               if (dgResult != DialogResult.Yes)
+               {
+                    return;
+               }
 
-        }
+               // delete profile, reload listbox
+               var profName = tbProfileName.Text.Trim();
 
-        /// <summary>
-        /// </summary>
-        private void btnSaveProfile_Click(object sender, EventArgs e)
-        {
-            // save profile details
-            var newProfile = new ProfileDetail();
+               lstProfiles.RemoveAll(x => x.profileName.Trim().ToLower() == profName.Trim().ToLower());
 
-            newProfile.profileName = tbProfileName.Text.Trim();
-            newProfile.siteUrl = tbSiteUrl.Text.Trim();
-            newProfile.username = tbUsername.Text.Trim();
-            newProfile.password = tbPassword.Text.Trim();
-            newProfile.domain = tbDomain.Text.Trim();
-            newProfile.isSpOnline = cbIsSharePointOnline.Checked;
+               LoadProfilesIntoListbox();
 
-            if (GenUtil.IsNull(newProfile.profileName))
-            {
-                MessageBox.Show("Profile name is required.", "Error");
-                return;
-            }
-            if (GenUtil.IsNull(newProfile.siteUrl))
-            {
-                MessageBox.Show("Site url is required.", "Error");
-                return;
-            }
-            if (GenUtil.IsNull(newProfile.username))
-            {
-                MessageBox.Show("Username is required.", "Error");
-                return;
-            }
-            if (GenUtil.IsNull(newProfile.password))
-            {
-                MessageBox.Show("Password is required.", "Error");
-                return;
-            }
-            if (!cbIsSharePointOnline.Checked && GenUtil.IsNull(newProfile.domain))
-            {
-                MessageBox.Show("Domain is required.", "Error");
-                return;
-            }
+               btnAddProfile_Click(null, null);
+          }
 
-            // get matching profile or create new
-            var existingProfile = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == newProfile.profileName.Trim().ToLower());
+          /// <summary>
+          /// </summary>
+          private void btnSaveProfile_Click(object sender, EventArgs e)
+          {
+               // save profile details
+               var newProfile = new ProfileDetail();
 
-            if (existingProfile == null)
-            {
-                lstProfiles.Add(newProfile);
-                LoadProfilesIntoListbox();
-            }
-            else
-            {
-                existingProfile.profileName = newProfile.profileName;
-                existingProfile.siteUrl = newProfile.siteUrl;
-                existingProfile.username = newProfile.username;
-                existingProfile.password = newProfile.password;
-                existingProfile.domain = newProfile.domain;
-                existingProfile.isSpOnline = newProfile.isSpOnline;
-            }
+               newProfile.profileName = tbProfileName.Text.Trim();
+               newProfile.siteUrl = tbSiteUrl.Text.Trim();
+               newProfile.username = tbUsername.Text.Trim();
+               newProfile.password = tbPassword.Text.Trim();
+               newProfile.domain = tbDomain.Text.Trim();
+               newProfile.isSpOnline = cbIsSharePointOnline.Checked;
 
-        }
+               if (GenUtil.IsNull(newProfile.profileName))
+               {
+                    MessageBox.Show("Profile name is required.", "Error");
+                    return;
+               }
+               if (GenUtil.IsNull(newProfile.siteUrl))
+               {
+                    MessageBox.Show("Site url is required.", "Error");
+                    return;
+               }
+               if (GenUtil.IsNull(newProfile.username))
+               {
+                    MessageBox.Show("Username is required.", "Error");
+                    return;
+               }
+               if (GenUtil.IsNull(newProfile.password))
+               {
+                    MessageBox.Show("Password is required.", "Error");
+                    return;
+               }
+               if (!cbIsSharePointOnline.Checked && GenUtil.IsNull(newProfile.domain))
+               {
+                    MessageBox.Show("Domain is required.", "Error");
+                    return;
+               }
 
-        /// <summary>
-        /// </summary>
-        private void btnDeleteProfile_Click(object sender, EventArgs e)
-        {
-            DialogResult dgResult = MessageBox.Show("Are you sure?",
-                "Delete Profile",
-                MessageBoxButtons.YesNo);
+               // get matching profile or create new
+               var existingProfile = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == newProfile.profileName.Trim().ToLower());
 
-            if (dgResult != DialogResult.Yes)
-            {
-                return;
-            }
+               if (existingProfile == null)
+               {
+                    lstProfiles.Add(newProfile);
+                    LoadProfilesIntoListbox();
+               }
+               else
+               {
+                    existingProfile.profileName = newProfile.profileName;
+                    existingProfile.siteUrl = newProfile.siteUrl;
+                    existingProfile.username = newProfile.username;
+                    existingProfile.password = newProfile.password;
+                    existingProfile.domain = newProfile.domain;
+                    existingProfile.isSpOnline = newProfile.isSpOnline;
+               }
+          }
 
-            // delete profile, reload listbox
-            var profName = tbProfileName.Text.Trim();
+          /// <summary>
+          /// </summary>
+          private void FormProfiles_Closed(object sender, EventArgs e)
+          {
+               // save profiles to file
+               SaveCurrentSessionInfo();
+          }
 
-            lstProfiles.RemoveAll(x => x.profileName.Trim().ToLower() == profName.Trim().ToLower());
+          /// <summary>
+          /// </summary>
+          private void GetRecentSessionInfo()
+          {
+               StreamReader sr = null;
 
-            LoadProfilesIntoListbox();
+               try
+               {
+                    string iniPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[] { '\\' }) + "\\" + "profiles.dat";
+                    var fi = new FileInfo(iniPath);
 
-            btnAddProfile_Click(null, null);
-        }
+                    if (fi.Exists)
+                    {
+                         sr = new StreamReader(iniPath);
+                         var content = sr.ReadToEnd();
+                         content = GenUtil.Cypher(content);
+                         lstProfiles = XmlSerialization.Deserialize<List<ProfileDetail>>(content);
+                    }
+               }
+               catch (Exception ex)
+               {
+                    MessageBox.Show(ex.Message, "Error");
+               }
+               finally
+               {
+                    if (sr != null) sr.Dispose();
+               }
+          }
 
-        /// <summary>
-        /// </summary>
-        private void btnAddProfile_Click(object sender, EventArgs e)
-        {
-            // create new profile and load its details
-            tbProfileName.Text = "";
-            tbSiteUrl.Text = "";
-            tbUsername.Text = "";
-            tbPassword.Text = "";
-            tbDomain.Text = "";
-            cbIsSharePointOnline.Checked = false;
+          /// <summary>
+          /// </summary>
+          private void lbProfiles_SelectedIndexChanged(object sender, EventArgs e)
+          {
+               // load selected profile details
+               if (lbProfiles.SelectedIndex < 0)
+               {
+                    return;
+               }
 
-            lbProfiles.SelectedIndex = -1;
-        }
+               var profName = lbProfiles.SelectedItem.ToString();
 
-        /// <summary>
-        /// </summary>
-        private void btnConnectProfile_Click(object sender, EventArgs e)
-        {
-            // save profile first
-            btnSaveProfile_Click(null, null);
+               if (GenUtil.IsNull(profName))
+               {
+                    return;
+               }
 
-            // get saved profile
-            var prof = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == tbProfileName.Text.Trim().ToLower());
+               var prof = lstProfiles.FirstOrDefault(x => x.profileName.Trim().ToLower() == profName.Trim().ToLower());
 
-            if (prof == null)
-            {
-                return;
-            }
+               if (prof == null)
+               {
+                    return;
+               }
 
-            form1.LoadProfile(prof);
-            this.Hide();
+               tbProfileName.Text = prof.profileName;
+               tbSiteUrl.Text = prof.siteUrl;
+               tbUsername.Text = prof.username;
+               tbPassword.Text = prof.password;
+               tbDomain.Text = prof.domain;
+               cbIsSharePointOnline.Checked = prof.isSpOnline;
+          }
 
-            form1.Show();
-            form1.Focus();
+          /// <summary>
+          /// </summary>
+          private void LoadProfilesIntoListbox()
+          {
+               lbProfiles.Items.Clear();
 
-            this.Close();
-        }
+               foreach (ProfileDetail profile in lstProfiles.OrderBy(x => x.profileName))
+               {
+                    lbProfiles.Items.Add(profile.profileName);
+               }
+          }
 
-    }
+          /// <summary>
+          /// </summary>
+          private void SaveCurrentSessionInfo()
+          {
+               StreamWriter sw = null;
+
+               try
+               {
+                    string iniPath = AppDomain.CurrentDomain.BaseDirectory.TrimEnd(new char[] { '\\' }) + "\\" + "profiles.dat";
+                    sw = new StreamWriter(iniPath, false);
+                    var xml = XmlSerialization.Serialize(lstProfiles);
+
+                    xml = GenUtil.Cypher(xml);
+
+                    sw.Write(xml);
+               }
+               catch (Exception ex)
+               {
+                    MessageBox.Show(ex.Message, "Error");
+               }
+               finally
+               {
+                    if (sw != null) sw.Dispose();
+               }
+          }
+
+          #endregion Private Methods
+     }
 }

@@ -1,31 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace BandR
+﻿namespace BandR
 {
-    public static class SimpleTextLogger
-    {
+     using System;
 
-        private const bool USE_LOG = true; // #changeme should be false
+     public static class SimpleTextLogger
+     {
+          #region Private Fields
 
-        /// <summary>
-        /// </summary>
-        public static void Write(string msg)
-        {
-            try
-            {
-                if (System.Environment.MachineName == "PERSEUS" || USE_LOG)
-                {
-                    System.IO.File.AppendAllText("c:\\temp\\spfilezilla.log.txt", DateTime.Now.ToString("o") + ": " + msg + Environment.NewLine);
-                }
-            }
-            catch (Exception)
-            {
-                // do nothing
-            }
-        }
+          private const bool USE_LOG = true;
 
-    }
+          #endregion Private Fields
+
+          // #changeme should be false
+
+          #region Public Methods
+
+          /// <summary>
+          /// </summary>
+          public static void Write(string msg)
+          {
+               try
+               {
+                    if (System.Environment.MachineName == "PERSEUS" || USE_LOG)
+                    {
+                         System.IO.File.AppendAllText("c:\\temp\\spfilezilla.log.txt", DateTime.Now.ToString("o") + ": " + msg + Environment.NewLine);
+                    }
+               }
+               catch (Exception)
+               {
+                    // do nothing
+               }
+          }
+
+          #endregion Public Methods
+     }
 }

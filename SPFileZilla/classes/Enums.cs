@@ -1,34 +1,43 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-namespace BandR
+﻿namespace BandR
 {
-    public class Enums
-    {
+     public class Enums
+     {
+          #region Public Classes
 
-        public class IconImages
-        {
-            public const int FOLDER = 0;
-            public const int FILE = 1;
-            public const int REFRESH = 2;
-            public const int LIST = 3;
-        }
+          public class IconImages
+          {
+               #region Public Fields
 
-        public class TreeNodeActions
-        {
-            public const string REFRESH = "0";
-            public const string UP = "1";
-        }
+               public const int FILE = 1;
+               public const int FOLDER = 0;
+               public const int LIST = 3;
+               public const int REFRESH = 2;
 
-        public class TreeNodeTypes
-        {
-            public const int OTHER = -1;
-            public const int FOLDER = 0;
-            public const int FILE = 1;
-            public const int LIST = 2;
-        }
+               #endregion Public Fields
+          }
 
-    }
+          public class TreeNodeActions
+          {
+               #region Public Fields
+
+               public const string REFRESH = "0";
+               public const string UP = "1";
+
+               #endregion Public Fields
+          }
+
+          public class TreeNodeTypes
+          {
+               #region Public Fields
+
+               public const int FILE = 1;
+               public const int FOLDER = 0;
+               public const int LIST = 2;
+               public const int OTHER = -1;
+
+               #endregion Public Fields
+          }
+
+          #endregion Public Classes
+     }
 }
